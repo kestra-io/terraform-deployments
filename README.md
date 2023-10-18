@@ -35,6 +35,8 @@ Run the command: `terraform init`
 
 Run the command: `terraform apply -var-file="secrets.tfvars"`
 
+> To connect through SSH to your EC2 instance: `ssh -i "kestra_key.pem" ubuntu@$(terraform output -raw web_public_dns)`
+
 ### To destroy everything that was created by the Terraform Config
 
 Run the command: `terraform destroy -var-file="secrets.tfvars"`
