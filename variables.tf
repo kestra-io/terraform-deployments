@@ -2,6 +2,10 @@ variable "aws_region" {
   default = "eu-north-1"
 }
 
+variable "s3_bucket" {
+  default = "kestra-prod"
+}
+
 variable "vpc_cidr_block" {
   description = "CIDR block for VPC"
   type        = string

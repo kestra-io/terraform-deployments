@@ -20,6 +20,13 @@ data "aws_availability_zones" "available" {
   state = "available"
 }
 
+resource "aws_s3_bucket" "kestra_s3_bucket" {
+  bucket = var.s3_bucket
+  tags = {
+    Name = "kestra_s3_bucket"
+  }
+}
+
 resource "aws_vpc" "kestra_vpc" {
   cidr_block           = var.vpc_cidr_block
   enable_dns_hostnames = true
