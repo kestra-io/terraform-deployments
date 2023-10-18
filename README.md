@@ -5,6 +5,8 @@ This repository contains Terraform files to deploy Kestra on AWS with the follow
 * RDS Postgres: the Kestra database backend
 * AWS S3: the Kestra storage
 
+![deploy schema](misc/deploy_aws.png)
+
 ## Create the Secrets file
 Create a secrets file called secrets.tfvars and populate it with the follow secrets:
 
