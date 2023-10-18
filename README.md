@@ -7,7 +7,10 @@ This repository contains Terraform files to deploy Kestra on AWS with the follow
 
 ![deploy schema](misc/deploy_aws.png)
 
-## Create the Secrets file
+
+## Running the Configuration
+
+### Create the Secrets file
 Create a secrets file called secrets.tfvars and populate it with the follow secrets:
 
 `db_username`: this is going to be the master user for RDS
@@ -18,8 +21,20 @@ Create a secrets file called secrets.tfvars and populate it with the follow secr
 
 > Note: If you already havea a configured AWS CLI you can remove the `aws_access_key` and `aws_secret_key` from the `main.tf` and `variables.tf`
 
-## Create the Key Pair
+### Create the Key Pair
 
 To authenticate to your EC2 instance easily you can create a key pair - allowing an SSH tunel connection:
 
 `ssh-keygen -t rsa -b 4096 -m pem -f kestra_kp && openssl rsa -in kestra_kp -outform pem && chmod 400 kestra_kp.pem`
+
+### Initializing the Terraform directory
+
+Run the command: `terraform init`
+
+### Apply the Terraform Config to AWS
+
+Run the command: `terraform apply -var-file="secrets.tfvars"`
+
+### To destroy everything that was created by the Terraform Config
+
+Run the command: `terraform destroy -var-file="secrets.tfvars"`
