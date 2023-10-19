@@ -10,6 +10,8 @@ This repository contains Terraform files to deploy Kestra on AWS with the follow
 
 ## Running the Configuration
 
+> Note: the current version of this configuration assumes that you already have an IAM user roles with the corresponding policies to provisione AWS resources.
+
 ### Create the Secrets file
 Create a secrets file called secrets.tfvars and populate it with the follow secrets:
 
@@ -26,6 +28,8 @@ Create a secrets file called secrets.tfvars and populate it with the follow secr
 To authenticate to your EC2 instance easily you can create a key pair - allowing an SSH tunel connection:
 
 `ssh-keygen -t rsa -b 4096 -m pem -f kestra_kp && openssl rsa -in kestra_kp -outform pem && chmod 400 kestra_kp.pem`
+
+> Note: depending of your system, the key might be named `kestra_kp` (without the `.pem` extension). You can use `mv kestra_kp kestra_kp.pem` to solve this issue.
 
 ### Initializing the Terraform directory
 
