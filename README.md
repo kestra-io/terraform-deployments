@@ -29,7 +29,7 @@ Create a secrets file called `secrets.tfvars` and populate it with the follow se
 
 ### Create the Key Pair
 
-To authenticate to your EC2 instance easily you can create a key pair - allowing an SSH tunel connection:
+To authenticate to your EC2 instance easily and provisione the script initiation you need to create a key pair - allowing a SSH tunel connection:
 
 `ssh-keygen -t rsa -b 4096 -m pem -f kestra_kp && openssl rsa -in kestra_kp -outform pem && chmod 400 kestra_kp.pem`
 
