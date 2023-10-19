@@ -1,9 +1,9 @@
 # Deploy Kestra on AWS
 
 This repository contains Terraform files to deploy Kestra on AWS with the following components:
-* AWS EC2: to host Kestra server
-* RDS Postgres: the Kestra database backend
-* AWS S3: the Kestra storage
+* **AWS EC2**: to host Kestra server
+* **RDS Postgres**: the Kestra database backend
+* **AWS S3**: the Kestra internal storage
 
 ![deploy schema](misc/deploy_aws.png)
 
