@@ -16,9 +16,13 @@ This repository contains Terraform files to deploy Kestra on AWS with the follow
 Create a secrets file called `secrets.tfvars` and populate it with the follow secrets:
 
 `db_username`: this is going to be the master user for RDS
+
 `db_password`: this is going to be the RDS master user's password
+
 `my_ip`: this is going to be your public IP
+
 `aws_access_key`: AWS Access Key
+
 `aws_secret_key`: AWS Secret Key
 
 > Note: If you already havea a configured AWS CLI you can remove the `aws_access_key` and `aws_secret_key` from the `main.tf` and `variables.tf`
