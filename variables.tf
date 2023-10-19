@@ -26,16 +26,16 @@ variable "settings" {
   type        = map(any)
   default = {
     "database" = {
-      allocated_storage = 10         // storage in gigabytes
-      engine            = "postgres" // engine type
-      engine_version      = "15.3"      // engine version
-      instance_class      = "db.t3.micro" // rds instance type
-      db_name             = "kestradb"    // database name
-      skip_final_snapshot = true
-      storage_type        = "gp2"
+      allocated_storage         = 10            // storage in gigabytes
+      engine                    = "postgres"    // engine type
+      engine_version            = "15.3"        // engine version
+      instance_class            = "db.t3.micro" // rds instance type
+      db_name                   = "kestradb"    // database name
+      final_snapshot_identifier = "kestradb-snapshot"
+      storage_type              = "gp2"
     },
     "kestra_app" = {
-      count         = 1          // the number of EC2 instances
+      count         = 1           // the number of EC2 instances
       instance_type = "t3.medium" // the EC2 instance
       ami           = "ami-0989fb15ce71ba39e"
     }
@@ -87,12 +87,12 @@ variable "db_password" {
 
 variable "aws_access_key" {
   description = "AWS Access Key"
-  type = string
-  sensitive = true
+  type        = string
+  sensitive   = true
 }
 
 variable "aws_secret_key" {
   description = "AWS Secret Key"
-  type = string
-  sensitive = true
+  type        = string
+  sensitive   = true
 }

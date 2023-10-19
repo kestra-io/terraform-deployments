@@ -152,7 +152,7 @@ resource "aws_db_instance" "kestradb" {
   password               = var.db_password
   db_subnet_group_name   = aws_db_subnet_group.kestra_db_subnet_group.id
   vpc_security_group_ids = [aws_security_group.kestra_db_sg.id]
-  skip_final_snapshot    = var.settings.database.skip_final_snapshot
+  final_snapshot_identifier    = var.settings.database.final_snapshot_identifier
 }
 
 
