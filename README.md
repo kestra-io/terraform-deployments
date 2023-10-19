@@ -48,3 +48,5 @@ Run the command: `terraform apply -var-file="secrets.tfvars"`
 ### To destroy everything that was created by the Terraform Config
 
 Run the command: `terraform destroy -var-file="secrets.tfvars"`
+
+> Note: when destroying resources, the database will be snapshotted
