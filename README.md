@@ -13,7 +13,7 @@ This repository contains Terraform files to deploy Kestra on AWS with the follow
 > Note: the current version of this configuration assumes that you already have an IAM user roles with the corresponding policies to provisione AWS resources.
 
 ### Create the Secrets file
-Create a secrets file called secrets.tfvars and populate it with the follow secrets:
+Create a secrets file called `secrets.tfvars` and populate it with the follow secrets:
 
 `db_username`: this is going to be the master user for RDS
 `db_password`: this is going to be the RDS master user's password

@@ -10,7 +10,7 @@ terraform {
 }
 
 provider "aws" {
-  region = var.aws_region
+  region     = var.aws_region
   access_key = var.aws_access_key
   secret_key = var.aws_secret_key
 }
@@ -73,7 +73,7 @@ resource "aws_route_table" "kestra_public_rt" {
 resource "aws_route_table_association" "public" {
   count          = var.subnet_count.public
   route_table_id = aws_route_table.kestra_public_rt.id
-  subnet_id      = 	aws_subnet.kestra_public_subnet[count.index].id
+  subnet_id      = aws_subnet.kestra_public_subnet[count.index].id
 }
 
 resource "aws_route_table" "kestra_private_rt" {
@@ -157,8 +157,8 @@ resource "aws_db_instance" "kestradb" {
 
 
 resource "aws_key_pair" "kestra_kp" {
-  key_name   = "kestra_kp"
-  
+  key_name = "kestra_kp"
+
   // This is going to be the public key of our
   // ssh key. The file directive grabs the file
   // from a specific path. Since the public key
@@ -168,12 +168,46 @@ resource "aws_key_pair" "kestra_kp" {
 }
 
 resource "aws_instance" "kestra_web" {
-  count                  = var.settings.kestra_app.count
-  ami                    = var.settings.kestra_app.ami
-  instance_type          = var.settings.kestra_app.instance_type
-  subnet_id              = aws_subnet.kestra_public_subnet[count.index].id
-  key_name               = aws_key_pair.kestra_kp.key_name
-  vpc_security_group_ids = [aws_security_group.kestra_web_sg.id]
+  count                       = var.settings.kestra_app.count
+  ami                         = var.settings.kestra_app.ami
+  instance_type               = var.settings.kestra_app.instance_type
+  subnet_id                   = aws_subnet.kestra_public_subnet[count.index].id
+  key_name                    = aws_key_pair.kestra_kp.key_name
+  vpc_security_group_ids      = [aws_security_group.kestra_web_sg.id]
+  associate_public_ip_address = true
+
+  provisioner "file" {
+    content = templatefile("docker-compose.tpl", {
+      db_host     = aws_db_instance.kestradb.address
+      db_port     = aws_db_instance.kestradb.port
+      db_username = var.db_username
+      db_password = var.db_password
+      aws_access_key = var.aws_access_key
+      aws_secret_key = var.aws_secret_key
+      aws_region = var.aws_region
+      aws_bucket = var.s3_bucket
+      }
+    )
+    destination = "docker-compose.yml"
+
+    connection {
+      type        = "ssh"
+      user        = "ubuntu"
+      host        = self.public_ip
+      private_key = file("kestra_kp.pem")
+    }
+  }
+
+  user_data = <<-EOF
+  #!/bin/bash
+  sudo apt update -y
+  sudo apt install docker.io -y
+  sudo apt install docker-compose -y
+  sudo apt-get update -y && sudo apt-get install postgresql-client -y
+  PGPASSWORD="${var.db_password}" createdb -h ${aws_db_instance.kestradb.address} -U ${var.db_username} -p ${aws_db_instance.kestradb.port} --no-password kestra
+  sudo docker-compose -f /home/ubuntu/docker-compose.yml up -d
+  EOF
+
   tags = {
     Name = "kestra_web_${count.index}"
   }
