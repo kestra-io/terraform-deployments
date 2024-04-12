@@ -2,6 +2,14 @@
 
 This repository gather different Kestra deployment recipes.
 
+### Azure Batch
+
+[🖇️ Link](azure-batch/README.md)
+
+### AWS Batch
+
+[🖇️ Link](aws-batch/README.md)
+
 ### AWS EC2
 
 [🖇️ Link](aws-ec2/README.md)

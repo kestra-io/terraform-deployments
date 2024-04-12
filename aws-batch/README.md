@@ -36,7 +36,7 @@ This Terraform script configures AWS resources necessary to run containerized ba
    terraform apply
    ```
 
-4. **Outputs:** after successful deployment, Terraform will output the ARNs for the ECS Task Execution Role, ECS Task Role, Batch Job Queue, and Batch Compute Environment that you can add to your AWS Batch script runner in Kestra.
+4. **Outputs:** after successful deployment, Terraform will output the ARNs for the ECS Task Execution Role, ECS Task Role, Batch Job Queue, and Batch Compute Environment that you can add to your AWS Batch task runner in Kestra.
 
 ## Customization
 
