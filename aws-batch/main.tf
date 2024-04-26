@@ -12,7 +12,7 @@ provider "aws" {
   profile = "kestra"
   default_tags {
     tags = {
-      project = "scriptRunner"
+      project = "kestra"
     }
   }
 }
