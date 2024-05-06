@@ -35,7 +35,7 @@ data "aws_subnets" "all_default_subnets" {
 }
 
 resource "aws_security_group" "aws_batch_sg" {
-  name        = vars.security_group_name
+  name        = "kestra-batch-sg"
   vpc_id      = data.aws_vpc.default.id
   description = "batch VPC security group"
 
@@ -50,8 +50,7 @@ resource "aws_security_group" "aws_batch_sg" {
 }
 
 resource "aws_iam_role" "batch_service_role" {
-  name = vars.batch_service_role_name
-
+  name = "kestra-batch-service-role"
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
@@ -72,7 +71,7 @@ resource "aws_iam_role_policy_attachment" "batch_service_role_policy_attachment"
 }
 
 resource "aws_batch_compute_environment" "aws_batch_compute_environment" {
-  compute_environment_name = vars.batch_compute_environment_name
+  compute_environment_name = "kestra-batch-compute-environment"
 
   compute_resources {
     max_vcpus = 256
@@ -90,7 +89,7 @@ resource "aws_batch_compute_environment" "aws_batch_compute_environment" {
 }
 
 resource "aws_batch_job_queue" "aws_batch_job_queue" {
-  name     = vars.batch_job_queue_name
+  name     = "kestra-batch-job-queue"
   state    = "ENABLED"
   priority = "1"
   compute_environment_order {
@@ -100,7 +99,7 @@ resource "aws_batch_job_queue" "aws_batch_job_queue" {
 }
 
 resource "aws_iam_role" "aws_ecs_task_execution_role" {
-  name = vars.ecs_task_execution_role_name
+  name = "kestra-ecs-task-execution-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
@@ -123,7 +122,7 @@ resource "aws_iam_role_policy_attachment" "ecs_task_execution_policy_attachment"
 
 # Create an ECS task role that includes S3 access permissions
 resource "aws_iam_role" "ecs_task_role" {
-  name = vars.ecs_task_role_name
+  name = "kestra-ecs-task-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
@@ -140,7 +139,7 @@ resource "aws_iam_role" "ecs_task_role" {
 }
 
 resource "aws_iam_policy" "ecs_task_role_s3_policy" {
-  name = vars.ecs_task_role_policy_name
+  name = "kestra-ecs-task-role-policy"
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
