@@ -18,7 +18,7 @@ provider "aws" {
 
 # Get the S3 bucket or replace with a resource to create a new bucket
 data "aws_s3_bucket" "kestra_bucket" {
-  bucket = "kestra-product-de"
+  bucket = var.bucket
 }
 
 # Get the default VPC for this region
