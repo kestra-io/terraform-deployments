@@ -8,8 +8,7 @@ terraform {
 }
 
 provider "aws" {
-  region  = "eu-central-1"
-  profile = "kestra" # TODO adjust this to "default" or other AWS CLI profile you are using
+  region        = var.region
   default_tags {
     tags = {
       project = "kestra"
