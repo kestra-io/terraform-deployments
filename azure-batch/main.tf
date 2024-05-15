@@ -42,7 +42,7 @@ maxNumberofVMs = 25;
 pendingTasks = avg($PendingTasks.GetSample(1));
 pendingTaskSamplePercent = $PendingTasks.GetSamplePercent(180 * TimeInterval_Second);
 avgPendingOverThreeMin = avg($PendingTasks.GetSample(180 *   TimeInterval_Second, 0));
-targetDedicatedNodesBasedOnPending = pendingTaskSamplePercent < 70 ? startingNumberOfVMs : pendingTasks > 0 ? max(1, avgPendingOverThreeMin) : 0;
+targetDedicatedNodesBasedOnPending = pendingTaskSamplePercent >= 70 && pendingTasks > 0 ? max(startingNumberOfVMs, avgPendingOverThreeMin) : startingNumberOfVMs;
 $TargetDedicatedNodes=min(maxNumberofVMs, targetDedicatedNodesBasedOnPending);
 $NodeDeallocationOption = taskcompletion;
 EOF

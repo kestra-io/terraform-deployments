@@ -37,7 +37,7 @@ This Terraform script configures Azure resources necessary to run containerized 
 
 - **Batch account:** The script references an existing Batch account. To create a new batch account, replace the data source with a resource block.
 - **Resource group:** The script references a group named `kestra-resource-group`. To create a new batch account, replace the data source with a resource block.
-- **Auto-scaling:** The created pool has auto-scaling configured based on the pending & active workload. Feel free to customize it or swap for a fixed scaling.
+- **Auto-scaling:** The created pool has auto-scaling configured based on the pending & active workload. This setup provide at least one node by default. Feel free to customize it or swap for a fixed scaling.
 - **VM Sizing:** The default nodes' size is `Standard_A1_V2`.
 
 For further customization, modify the Terraform scripts according to your project's requirements.
