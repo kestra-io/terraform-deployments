@@ -1,0 +1,65 @@
+volumes:
+  kestra-data:
+    driver: local
+
+services:
+  kestra:
+    image: registry.kestra.io/docker/kestra-ee:${kestra-version}
+    pull_policy: always
+    user: "root"
+    command: server standalone --worker-thread=128
+    volumes:
+      - kestra-data:/app/storage
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /tmp/kestra-wd:/tmp/kestra-wd
+      - /app/ssl:/app/ssl
+    environment:
+      KESTRA_CONFIGURATION: |
+        kestra:
+          elasticsearch:
+            client:
+              http-hosts:
+               - ${opensearch-uri}
+              trust-all-ssl: true
+              basic-auth:
+                username: ${opensearch-username}
+                password: ${opensearch-password}
+          encryption:
+            secret-key: ${encryption-key}
+          ee:
+            license:
+              id: ${license-id}
+              key: ${license-key}        
+          server:
+            basic-auth:
+              enabled: true
+              username: "${kestra-username}" # it must be a valid email address
+              password: ${kestra-password}
+          repository:
+            type: elasticsearch
+          kafka:
+            client:
+              properties:
+                bootstrap.servers: "${bootstrap-server}"
+                security.protocol: "SSL"
+                ssl.protocol: "TLS"
+                ssl.keystore.type: "PKCS12"
+                ssl.keystore.location: "/app/ssl/client.keystore.p12"
+                ssl.keystore.password: "safePassword123"
+                ssl.key.password: "safePassword123"
+                ssl.truststore.location: "/app/ssl/client.truststore.jks"
+                ssl.truststore.password: "safePassword123"
+                ssl.truststore.type: "JKS"                
+          storage:
+            type: local
+            local:
+              base-path: "/app/storage"
+          queue:
+            type: kafka
+          tasks:
+            tmp-dir:
+              path: /tmp/kestra-wd/tmp
+          url: http://localhost:8080/
+    ports:
+      - "8080:8080"
+      - "8081:8081"

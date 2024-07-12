@@ -1,0 +1,43 @@
+volumes:
+  kestra-data:
+    driver: local
+
+services:
+  kestra:
+    image: kestra/kestra:${kestra-version}
+    pull_policy: always
+    user: "root"
+    command: server standalone --worker-thread=128
+    volumes:
+      - kestra-data:/app/storage
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /tmp/kestra-wd:/tmp/kestra-wd
+    environment:
+      KESTRA_CONFIGURATION: |
+        datasources:
+          postgres:
+            url: ${pg-jdbc}
+            driverClassName: org.postgresql.Driver
+            username: ${pg-username}
+            password: ${pg-password}
+        kestra:
+          server:
+            basic-auth:
+              enabled: true
+              username: "${kestra-username}" # it must be a valid email address
+              password: ${kestra-password}
+          repository:
+            type: postgres
+          storage:
+            type: local
+            local:
+              base-path: "/app/storage"
+          queue:
+            type: postgres
+          tasks:
+            tmp-dir:
+              path: /tmp/kestra-wd/tmp
+          url: http://localhost:8080/
+    ports:
+      - "8080:8080"
+      - "8081:8081"
