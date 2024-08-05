@@ -20,7 +20,7 @@ resource "null_resource" "deploy_app" {
   depends_on = [google_compute_instance.kestra_vm]
   provisioner "file" {
     content = templatefile("${path.module}/scripts/docker-compose.yml.tftpl", {
-      kestra-version  = "v${var.kestra_version}-full",
+      kestra-version  = "v${var.kestra_version}",
       kestra-username = var.kestra_username,
       kestra-password = var.kestra_password,
       pg-jdbc         = "jdbc:postgresql://${aiven_pg.postgres.service_host}:${aiven_pg.postgres.service_port}/${var.aiven_db}",

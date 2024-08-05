@@ -89,7 +89,7 @@ resource "null_resource" "deploy_app" {
   depends_on = [null_resource.deploy_config, aiven_kafka.kestra_kafka, aiven_opensearch.kestra_os]
   provisioner "file" {
     content = templatefile("${path.module}/scripts/docker-compose.yml.tftpl", {
-      kestra-version      = "v${var.kestra_version}-full",
+      kestra-version      = "v${var.kestra_version}",
       kestra-username     = var.kestra_username,
       kestra-password     = var.kestra_password,
       license-id          = var.kestra_license_id,
