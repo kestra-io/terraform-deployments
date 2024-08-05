@@ -1,6 +1,6 @@
 services:
   kestra:
-    image: kestra/kestra:latest-full
+    image: kestra/kestra:latest
     entrypoint: /bin/bash
     environment:
       KESTRA_CONFIGURATION: |
