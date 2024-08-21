@@ -1,9 +1,5 @@
 variable "aws_region" {
-  default = "eu-north-1"
-}
-
-variable "s3_bucket" {
-  default = "kestra-prod"
+  default = "eu-west-3"
 }
 
 variable "vpc_cidr_block" {
@@ -28,7 +24,7 @@ variable "settings" {
     "database" = {
       allocated_storage         = 10            // storage in gigabytes
       engine                    = "postgres"    // engine type
-      engine_version            = "15.3"        // engine version
+      engine_version            = "16.3"        // engine version
       instance_class            = "db.t3.micro" // rds instance type
       db_name                   = "kestradb"    // database name
       final_snapshot_identifier = "kestradb-snapshot"
@@ -37,7 +33,6 @@ variable "settings" {
     "kestra_app" = {
       count         = 1           // the number of EC2 instances
       instance_type = "t3.medium" // the EC2 instance
-      ami           = "ami-0989fb15ce71ba39e"
     }
   }
 }
@@ -95,4 +90,16 @@ variable "aws_secret_key" {
   description = "AWS Secret Key"
   type        = string
   sensitive   = true
+}
+
+variable "kestra_user" {
+  type      = string
+  sensitive = false
+  default = "admin@kestra.io"
+  description = "Make sure to use a valid email address"
+}
+
+variable "kestra_password" {
+  type      = string
+  sensitive = true
 }

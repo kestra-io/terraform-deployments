@@ -1,3 +1,6 @@
 .idea
 .terraform*
 terraform.tfstate*
+**/terraform.tfvars
+aws-ec2/kestra_kp.pem
+aws-ec2/kestra_kp.pub

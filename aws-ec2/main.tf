@@ -2,11 +2,14 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 4.16"
+      version = "~> 5.63.1"
+    }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.6.2"
     }
   }
-
-  required_version = ">= 1.2.0"
+  required_version = ">= 1.8.2"
 }
 
 provider "aws" {
@@ -20,8 +23,18 @@ data "aws_availability_zones" "available" {
   state = "available"
 }
 
+resource "random_string" "s3_bucket_suffix" {
+  length  = 8
+  special = false
+  upper   = false
+}
+
+locals {
+  s3_bucket_name = "kestra-${random_string.s3_bucket_suffix.result}"
+}
+
 resource "aws_s3_bucket" "kestra_s3_bucket" {
-  bucket = var.s3_bucket
+  bucket = local.s3_bucket_name
   tags = {
     Name = "kestra_s3_bucket"
   }
@@ -169,7 +182,7 @@ resource "aws_key_pair" "kestra_kp" {
 
 resource "aws_instance" "kestra_web" {
   count                       = var.settings.kestra_app.count
-  ami                         = var.settings.kestra_app.ami
+  ami                         = data.aws_ami.ubuntu.id
   instance_type               = var.settings.kestra_app.instance_type
   subnet_id                   = aws_subnet.kestra_public_subnet[count.index].id
   key_name                    = aws_key_pair.kestra_kp.key_name
@@ -185,7 +198,9 @@ resource "aws_instance" "kestra_web" {
       aws_access_key = var.aws_access_key
       aws_secret_key = var.aws_secret_key
       aws_region = var.aws_region
-      aws_bucket = var.s3_bucket
+      aws_bucket = local.s3_bucket_name
+      kestra_user     = var.kestra_user
+      kestra_password = var.kestra_password      
       }
     )
     destination = "docker-compose.yml"
@@ -216,8 +231,24 @@ resource "aws_instance" "kestra_web" {
 resource "aws_eip" "kestra_web_eip" {
   count    = var.settings.kestra_app.count
   instance = aws_instance.kestra_web[count.index].id
-  vpc      = true
+  domain   = "vpc"
   tags = {
     Name = "kestra_web_eip_${count.index}"
   }
+}
+
+data "aws_ami" "ubuntu" {
+  most_recent = true
+
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+
+  owners = ["099720109477"]
 }

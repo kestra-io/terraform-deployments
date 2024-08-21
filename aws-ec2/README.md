@@ -31,7 +31,10 @@ Create a secrets file called `secrets.tfvars` and populate it with the follow se
 
 To authenticate to your EC2 instance easily and provision the script initiation you need to create a key pair - allowing a SSH tunel connection:
 
-`ssh-keygen -t rsa -b 4096 -m pem -f kestra_kp && openssl rsa -in kestra_kp -outform pem && chmod 400 kestra_kp.pem`
+```bash
+ssh-keygen -t rsa -b 4096 -m pem -f kestra_kp && openssl rsa -in kestra_kp -outform pem && chmod 400 kestra_kp.pem
+mv kestra_kp kestra_kp.pem
+```
 
 > Note: depending of your system, the key might be named `kestra_kp` (without the `.pem` extension). You can use `mv kestra_kp kestra_kp.pem` to solve this issue.
 
@@ -43,7 +46,13 @@ Run the command: `terraform init`
 
 Run the command: `terraform apply -var-file="secrets.tfvars"`
 
-> To connect through SSH to your EC2 instance: `ssh -i "kestra_key.pem" ubuntu@$(terraform output -raw web_public_dns)`
+> To connect through SSH to your EC2 instance: 
+
+```bash
+ssh -i "kestra_kp.pem" ubuntu@$(terraform output -raw web_public_dns)
+```
+
+> If the `aws_key_pair` resource already exists, you may need to import it instead of recreating it; alternatively, define it as datasource instead of resource.
 
 ### To destroy everything that was created by the Terraform Config
 

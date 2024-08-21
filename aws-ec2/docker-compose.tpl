@@ -19,14 +19,14 @@ services:
               accessKey: "${aws_access_key}"
               secretKey: "${aws_secret_key}"
               region: "${aws_region}"
-              bucket: "${aws_bucket}"
+              bucket: local.s3_bucket_name
           queue:
             type: postgres
           server:
             basic-auth:
               enabled: true
-              username: admin
-              password: kestra
+              username: "${kestra_user}"
+              password: "${kestra_password}"
           tasks:
             scripts:
               docker:
