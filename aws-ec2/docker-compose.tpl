@@ -19,7 +19,7 @@ services:
               accessKey: "${aws_access_key}"
               secretKey: "${aws_secret_key}"
               region: "${aws_region}"
-              bucket: local.s3_bucket_name
+              bucket: "${aws_bucket}"
           queue:
             type: postgres
           server:
