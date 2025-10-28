@@ -1,0 +1,42 @@
+name: Upload changed template to S3
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - "aws/cloudformation/ec2-rds-s3/kestra-oss.yaml"
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-west-1
+
+      - name: Determine changed file path
+        id: changed_file
+        run: |
+          FILE_PATH=$(git diff-tree --no-commit-id --name-only -r ${{ github.sha }} | grep '^aws/cloudformation/ec2-rds-s3/kestra-oss.yaml$' || true)
+          echo "file_path=$FILE_PATH" >> $GITHUB_OUTPUT
+
+      - name: Upload file to S3
+        if: steps.changed_file.outputs.file_path != ''
+        run: |
+          aws s3 cp "${{ steps.changed_file.outputs.file_path }}" \
+            "s3://kestra-deployment-templates/${{ steps.changed_file.outputs.file_path }}" \
+            --acl public-read
+
+      - name: Output public URL
+        if: steps.changed_file.outputs.file_path != ''
+        run: |
+          echo "File uploaded to:"
+          echo "https://kestra-deployment-templates.s3.eu-west-1.amazonaws.com/${{ steps.changed_file.outputs.file_path }}"
