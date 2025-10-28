@@ -29,38 +29,6 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: eu-west-1
 
-<<<<<<< Updated upstream
-      - name: Determine changed file path
-        id: changed_file
-        shell: bash
-        run: |
-          set -euo pipefail
-          echo "Before: ${{ github.event.before }}"
-          echo "After : ${{ github.event.after }}"
-          git log -1 --oneline
-
-          FILE_PATHS=$(git diff --name-only "${{ github.event.before }}" "${{ github.event.after }}" || true)
-          echo "Changed files:"
-          echo "${FILE_PATHS}"
-
-          MATCH=$(echo "${FILE_PATHS}" | grep -E '^aws/cloudformation/ec2-rds-s3/kestra-oss.yaml$' || true)
-          echo "Matched file: ${MATCH:-<none>}"
-
-          echo "file_path=${MATCH}" >> "$GITHUB_OUTPUT"
-
-      - name: Upload file to S3
-        if: steps.changed_file.outputs.file_path != ''
-        run: |
-          aws s3 cp "${{ steps.changed_file.outputs.file_path }}" \
-            "s3://kestra-deployment-templates/${{ steps.changed_file.outputs.file_path }}" \
-            --acl public-read
-
-      - name: Output public URL
-        if: steps.changed_file.outputs.file_path != ''
-        run: |
-          echo "File uploaded to:"
-          echo "https://kestra-deployment-templates.s3.eu-west-1.amazonaws.com/${{ steps.changed_file.outputs.file_path }}"
-=======
       - name: Sync only listed files
         run: |
             aws s3 sync . "s3://${{ env.BUCKET_NAME }}/" \
@@ -68,4 +36,3 @@ jobs:
             --exact-timestamps \
             --exclude "*" \
             --include "${{ env.TEMPLATE1 }}" \
->>>>>>> Stashed changes
