@@ -1,7 +1,7 @@
-# aws cloudformation create-stack \                                                                     ()
+# aws cloudformation create-stack \
 #   --region eu-west-1 \
 #   --stack-name kestra-marketplace-stack \
-#   --template-body file://./minimal-infra.yaml \
+#   --template-body file://./kestra-infra.yaml \
 #   --parameters \
 #     ParameterKey=MasterUserPassword,ParameterValue=MySecurePass123 \
 #     ParameterKey=BasicAuthUser,ParameterValue=admin@kestra.io \
@@ -16,11 +16,10 @@
 #     ParameterKey=DBName,ParameterValue=kestra \
 #     ParameterKey=DBEngineVersion,ParameterValue=17.4 \
 #     ParameterKey=DBInstanceClass,ParameterValue=db.t4g.micro \
-#     ParameterKey=InternalCIDR,ParameterValue=172.31.0.0/16 \
 #     ParameterKey=EC2InstanceType,ParameterValue=t3.medium \
 #   --capabilities CAPABILITY_IAM
 #
-# aws cloudformation delete-stack \                                                                     ()
+# aws cloudformation delete-stack \
 #   --region eu-west-1 \
 #   --stack-name kestra-marketplace-stack
 # -----------------------------------------------------------------------------
@@ -43,8 +42,9 @@ Parameters:
   BucketName:
     Type: String
   LatestAmiId:
-    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
-    Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64
+    Type: String
+    Default: ami-0eb625266975fb21d
+    Description: Ubuntu AMI with Docker preinstalled
   AWSRegion:
     Type: String
     Default: eu-west-1
@@ -76,8 +76,6 @@ Parameters:
   SubnetIdRDS1:
     Type: String
   SubnetIdRDS2:
-    Type: String
-  InternalCIDR:
     Type: String
   EC2InstanceType:
     Type: String
@@ -178,12 +176,6 @@ Resources:
         Ref: VpcId
       SecurityGroupIngress:
         - IpProtocol: tcp
-          FromPort: 5432
-          ToPort: 5432
-          CidrIp:
-            Ref: InternalCIDR
-          Description: RDS internal access
-        - IpProtocol: tcp
           FromPort: 8080
           ToPort: 8080
           CidrIp: 0.0.0.0/0
@@ -208,21 +200,12 @@ Resources:
         - Ref: AppSecurityGroup
       ImageId:
         Ref: LatestAmiId
-      Tags:
-        - Key: Redeploy
-          Value: "true"
       UserData:
         Fn::Base64:
           Fn::Sub: |
             #!/bin/bash
             set -e
-            dnf update -y
-            dnf install -y docker
-            systemctl enable docker
-            systemctl start docker
-            usermod -aG docker ec2-user
-
-            cat <<EOF > /home/ec2-user/application-aws-ec2-marketplace.yaml
+            cat <<EOF > /home/ubuntu/application-aws-ec2-marketplace.yaml
             datasources:
               postgres:
                 url: jdbc:postgresql://${PostgresDB.Endpoint.Address}:5432/${DBName}
@@ -249,18 +232,16 @@ Resources:
                   path: "/tmp/kestra-wd/tmp"
               url: "http://localhost:8080/"
             EOF
-
+            echo "Config file written to /home/ubuntu/application-aws-ec2-marketplace.yaml" > /home/ubuntu/READY.txt
             docker run --pull=always --rm -d \
               -p 8080:8080 \
               --user=root \
               -e MICRONAUT_ENVIRONMENTS=aws-ec2-marketplace \
-              -v /home/ec2-user/application-aws-ec2-marketplace.yaml:/etc/config/application-aws-ec2-marketplace.yaml \
+              -v /home/ubuntu/application-aws-ec2-marketplace.yaml:/etc/config/application-aws-ec2-marketplace.yaml \
               -v /var/run/docker.sock:/var/run/docker.sock \
               --name kestra \
               kestra/kestra:latest server standalone --config /etc/config/application-aws-ec2-marketplace.yaml
-
-            echo "Config file written to /home/ec2-user/application-aws-ec2-marketplace.yaml" > /home/ec2-user/READY.txt
-
+            echo "Kestra server started" > /home/ubuntu/READY.txt
   # -------------------------
   # IAM Role and Instance Profile
   # -------------------------
