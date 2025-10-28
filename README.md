@@ -1,6 +1,8 @@
-# Kestra Terraform Deployments
+# Kestra Deployments
 
 This repository gather different Kestra deployment recipes.
+
+### AWS Cloudformation
 
 ### Azure Batch
 
