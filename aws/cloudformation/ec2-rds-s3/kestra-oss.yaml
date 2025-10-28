@@ -1,3 +1,4 @@
+# Create stack:
 # aws cloudformation create-stack \
 #   --region eu-west-1 \
 #   --stack-name kestra-marketplace-stack \
@@ -19,15 +20,15 @@
 #     ParameterKey=EC2InstanceType,ParameterValue=<ec2-instance> \
 #   --capabilities CAPABILITY_IAM
 #
+# Delete stack:
 # aws cloudformation delete-stack \
 #   --region eu-west-1 \
 #   --stack-name kestra-marketplace-stack
-# -----------------------------------------------------------------------------
+#
 # Prerequisites (manual setup required before running the stack)
 # - An existing VPC
 # - Existing subnets inside that VPC
 # - Appropriate IAM permissions for the user running the command
-# -----------------------------------------------------------------------------
 
 AWSTemplateFormatVersion: "2010-09-09"
 Description: PostgreSQL RDS, S3 bucket, and EC2 (with Docker) in eu-west-1

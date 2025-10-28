@@ -8,9 +8,9 @@ on:
       - aws/cloudformation/ec2-rds-s3/kestra-oss.yaml
 
 env:
-  TEMPLATE1: aws/cloudformation/ec2-rds-s3/kestra-oss.yaml
+  FILE_PATH: aws/cloudformation/ec2-rds-s3/kestra-oss.yaml
   BUCKET_NAME: kestra-deployment-templates
-  AWS_REGION: eu-west-1
+  AWS_REGION: eu-west-3
 
 jobs:
   upload:
@@ -27,9 +27,9 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: eu-west-1
+          aws-region: ${{ env.AWS_REGION }}
 
-      - name: Upload file (no ACL)
+      - name: Upload file to S3
         run: |
           aws s3 cp "${{ env.FILE_PATH }}" \
             "s3://${{ env.BUCKET_NAME }}/${{ env.FILE_PATH }}" \
