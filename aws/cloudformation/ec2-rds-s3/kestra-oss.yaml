@@ -19,6 +19,7 @@
 #     ParameterKey=EC2InstanceType,ParameterValue=<ec2-instance> \
 #   --capabilities CAPABILITY_IAM
 #
+#
 # aws cloudformation delete-stack \
 #   --region eu-west-1 \
 #   --stack-name kestra-marketplace-stack
