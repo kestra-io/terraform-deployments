@@ -1,22 +1,22 @@
 # aws cloudformation create-stack \
 #   --region eu-west-1 \
 #   --stack-name kestra-marketplace-stack \
-#   --template-body file://./kestra-infra.yaml \
+#   --template-body file://./kestra-oss.yaml \
 #   --parameters \
-#     ParameterKey=MasterUserPassword,ParameterValue=MySecurePass123 \
-#     ParameterKey=BasicAuthUser,ParameterValue=admin@kestra.io \
-#     ParameterKey=BasicAuthPassword,ParameterValue=SuperSecret123 \
-#     ParameterKey=BucketName,ParameterValue=kestra-storage-marketplace-stack-241025 \
+#     ParameterKey=MasterUserPassword,ParameterValue=<db-password> \
+#     ParameterKey=BasicAuthUser,ParameterValue=<kestra-admin-username> \
+#     ParameterKey=BasicAuthPassword,ParameterValue=<kestra-admin-password> \
+#     ParameterKey=BucketName,ParameterValue=<bucket-name> \
 #     ParameterKey=AWSRegion,ParameterValue=eu-west-1 \
-#     ParameterKey=VpcId,ParameterValue=vpc-08c780d509bd679ff \
-#     ParameterKey=SubnetIdEC2,ParameterValue=subnet-0c8d554dba1bab639 \
-#     ParameterKey=SubnetIdRDS1,ParameterValue=subnet-0ec14699238d167c3 \
-#     ParameterKey=SubnetIdRDS2,ParameterValue=subnet-099b219b9c3440fb4 \
+#     ParameterKey=VpcId,ParameterValue=<vpc-id> \
+#     ParameterKey=SubnetIdEC2,ParameterValue=<subnet1> \
+#     ParameterKey=SubnetIdRDS1,ParameterValue=<subnet2> \
+#     ParameterKey=SubnetIdRDS2,ParameterValue=<subnet3> \
 #     ParameterKey=DBInstanceIdentifier,ParameterValue=kestra-db \
 #     ParameterKey=DBName,ParameterValue=kestra \
-#     ParameterKey=DBEngineVersion,ParameterValue=17.4 \
-#     ParameterKey=DBInstanceClass,ParameterValue=db.t4g.micro \
-#     ParameterKey=EC2InstanceType,ParameterValue=t3.medium \
+#     ParameterKey=DBEngineVersion,ParameterValue=<db-engine-version> \
+#     ParameterKey=DBInstanceClass,ParameterValue=<db-instance> \
+#     ParameterKey=EC2InstanceType,ParameterValue=<ec2-instance> \
 #   --capabilities CAPABILITY_IAM
 #
 # aws cloudformation delete-stack \
