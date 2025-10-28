@@ -29,10 +29,12 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: eu-west-1
 
-      - name: Sync only listed files
+      - name: Upload file (no ACL)
         run: |
-            aws s3 sync . "s3://${{ env.BUCKET_NAME }}/" \
-            --acl public-read \
-            --exact-timestamps \
-            --exclude "*" \
-            --include "${{ env.TEMPLATE1 }}" \
+          aws s3 cp "${{ env.FILE_PATH }}" \
+            "s3://${{ env.BUCKET_NAME }}/${{ env.FILE_PATH }}" \
+            --no-progress
+
+      - name: Output public URL
+        run: |
+          echo "https://${{ env.BUCKET_NAME }}.s3.${{ env.AWS_REGION }}.amazonaws.com/${{ env.FILE_PATH }}"
