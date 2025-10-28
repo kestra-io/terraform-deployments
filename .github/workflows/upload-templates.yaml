@@ -3,7 +3,7 @@ name: Upload changed template to S3
 on:
   push:
     branches:
-      - main
+      - master
     paths:
       - "aws/cloudformation/ec2-rds-s3/kestra-oss.yaml"
 
@@ -12,8 +12,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout repository (full history)
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -24,9 +26,21 @@ jobs:
 
       - name: Determine changed file path
         id: changed_file
+        shell: bash
         run: |
-          FILE_PATH=$(git diff-tree --no-commit-id --name-only -r ${{ github.sha }} | grep '^aws/cloudformation/ec2-rds-s3/kestra-oss.yaml$' || true)
-          echo "file_path=$FILE_PATH" >> $GITHUB_OUTPUT
+          set -euo pipefail
+          echo "Before: ${{ github.event.before }}"
+          echo "After : ${{ github.event.after }}"
+          git log -1 --oneline
+
+          FILE_PATHS=$(git diff --name-only "${{ github.event.before }}" "${{ github.event.after }}" || true)
+          echo "Changed files:"
+          echo "${FILE_PATHS}"
+
+          MATCH=$(echo "${FILE_PATHS}" | grep -E '^aws/cloudformation/ec2-rds-s3/kestra-oss.yaml$' || true)
+          echo "Matched file: ${MATCH:-<none>}"
+
+          echo "file_path=${MATCH}" >> "$GITHUB_OUTPUT"
 
       - name: Upload file to S3
         if: steps.changed_file.outputs.file_path != ''
