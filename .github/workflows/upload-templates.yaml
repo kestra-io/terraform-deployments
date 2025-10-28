@@ -3,7 +3,7 @@ name: Upload changed template to S3
 on:
   push:
     branches:
-      - master
+      - main
     paths:
       - "aws/cloudformation/ec2-rds-s3/kestra-oss.yaml"
 
