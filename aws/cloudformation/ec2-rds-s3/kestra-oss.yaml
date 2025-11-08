@@ -37,11 +37,14 @@ Parameters:
   MasterUsername:
     Type: String
     Default: kestra
+    Description: Username for Postgres DB
   MasterUserPassword:
     Type: String
     NoEcho: true
+    Description: Password for Postgres DB
   BucketName:
     Type: String
+    Description: Name of the S3 bucket used for storage
   LatestAmiId:
     Type: String
     Default: ami-0eb625266975fb21d
@@ -61,26 +64,35 @@ Parameters:
   DBInstanceIdentifier:
     Type: String
     Default: kestra
+    Description: DBMS instance name
   DBName:
     Type: String
     Default: kestra
+    Description: Database name used for Kestra
   DBEngineVersion:
     Type: String
-    Default: "17.4"
+    Default: '17.4'
+    Description: Postgres version
   DBInstanceClass:
     Type: String
     Default: db.t4g.micro
+    Description: Instance machine type for the database
   VpcId:
     Type: String
+    Description: ID of VPC to deploy the resources
   SubnetIdEC2:
     Type: String
+    Description: ID of subnet to deploy the EC2
   SubnetIdRDS1:
     Type: String
+    Description: ID of subnet 1 for DB subnet group
   SubnetIdRDS2:
     Type: String
+    Description: ID of subnet 2 for DB subnet group
   EC2InstanceType:
     Type: String
     Default: t3.medium
+    Description: Instance machine type for the EC2
 
 Resources:
   # -------------------------
