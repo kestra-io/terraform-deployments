@@ -33,7 +33,7 @@
 # - Appropriate IAM permissions for the user running the command
 
 AWSTemplateFormatVersion: "2010-09-09"
-Description: PostgreSQL RDS, S3 bucket, and EC2 (with Docker) in eu-west-1
+Description: PostgreSQL RDS, S3 bucket, and EC2 (with Docker)
 
 Parameters:
   MasterUsername:
@@ -52,7 +52,6 @@ Parameters:
     Description: The ID of the Ubuntu AMI used to launch the EC2 instance. Use an AMI with Docker preinstalled.
   AWSRegion:
     Type: String
-    Default: eu-west-1
     Description: The AWS region where all resources (EC2, RDS, S3) will be deployed.
   BasicAuthUser:
     Type: String
