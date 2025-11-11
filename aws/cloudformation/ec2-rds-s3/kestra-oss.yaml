@@ -30,24 +30,20 @@
 # - Existing subnets inside that VPC
 # - Appropriate IAM permissions for the user running the command
 
-AWSTemplateFormatVersion: '2010-09-09'
+AWSTemplateFormatVersion: "2010-09-09"
 Description: PostgreSQL RDS, S3 bucket, and EC2 (with Docker) in eu-west-1
 
 Parameters:
   MasterUsername:
     Type: String
     Default: kestra
-    Description: Username for Postgres DB
   MasterUserPassword:
     Type: String
     NoEcho: true
-    Description: Password for Postgres DB
   BucketName:
     Type: String
-    Description: Name of the S3 bucket used for storage
   LatestAmiId:
     Type: String
-    Default: ami-0eb625266975fb21d
     Description: Ubuntu AMI with Docker preinstalled
   AWSRegion:
     Type: String
@@ -64,35 +60,29 @@ Parameters:
   DBInstanceIdentifier:
     Type: String
     Default: kestra
-    Description: DBMS instance name
   DBName:
     Type: String
     Default: kestra
-    Description: Database name used for Kestra
   DBEngineVersion:
     Type: String
-    Default: '17.4'
-    Description: Postgres version
+    Default: "17.4"
   DBInstanceClass:
     Type: String
     Default: db.t4g.micro
-    Description: Instance machine type for the database
   VpcId:
     Type: String
-    Description: ID of VPC to deploy the resources
   SubnetIdEC2:
     Type: String
-    Description: ID of subnet to deploy the EC2
   SubnetIdRDS1:
     Type: String
-    Description: ID of subnet 1 for DB subnet group
   SubnetIdRDS2:
     Type: String
-    Description: ID of subnet 2 for DB subnet group
   EC2InstanceType:
     Type: String
     Default: t3.medium
-    Description: Instance machine type for the EC2
+  KeyPairName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: Name of an existing EC2 Key Pair to enable SSH access
 
 Resources:
   # -------------------------
@@ -101,14 +91,20 @@ Resources:
   PostgresDB:
     Type: AWS::RDS::DBInstance
     Properties:
-      DBInstanceIdentifier: !Ref DBInstanceIdentifier
-      DBName: !Ref DBName
+      DBInstanceIdentifier:
+        Ref: DBInstanceIdentifier
+      DBName:
+        Ref: DBName
       Engine: postgres
-      EngineVersion: !Ref DBEngineVersion
-      MasterUsername: !Ref MasterUsername
-      MasterUserPassword: !Ref MasterUserPassword
+      EngineVersion:
+        Ref: DBEngineVersion
+      MasterUsername:
+        Ref: MasterUsername
+      MasterUserPassword:
+        Ref: MasterUserPassword
       AllocatedStorage: 20
-      DBInstanceClass: !Ref DBInstanceClass
+      DBInstanceClass:
+        Ref: DBInstanceClass
       PubliclyAccessible: false
       BackupRetentionPeriod: 0
       MultiAZ: false
@@ -117,8 +113,9 @@ Resources:
       DeleteAutomatedBackups: true
       AutoMinorVersionUpgrade: false
       VPCSecurityGroups:
-        - !Ref RDSSecurityGroup
-      DBSubnetGroupName: !Ref DBSubnetGroup
+        - Ref: RDSSecurityGroup
+      DBSubnetGroupName:
+        Ref: DBSubnetGroup
 
   # -------------------------
   # DB Subnet Group for RDS
@@ -128,8 +125,8 @@ Resources:
     Properties:
       DBSubnetGroupDescription: Use existing VPC subnets for RDS
       SubnetIds:
-        - !Ref SubnetIdRDS1
-        - !Ref SubnetIdRDS2
+        - Ref: SubnetIdRDS1
+        - Ref: SubnetIdRDS2
       Tags:
         - Key: Name
           Value: kestra-db-subnet-group
@@ -141,12 +138,14 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Allow EC2 to access RDS on port 5432
-      VpcId: !Ref VpcId
+      VpcId:
+        Ref: VpcId
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 5432
           ToPort: 5432
-          SourceSecurityGroupId: !Ref AppSecurityGroup
+          SourceSecurityGroupId:
+            Ref: AppSecurityGroup
       SecurityGroupEgress:
         - IpProtocol: -1
           CidrIp: 0.0.0.0/0
@@ -158,7 +157,8 @@ Resources:
     Type: AWS::S3::Bucket
     DeletionPolicy: Delete
     Properties:
-      BucketName: !Ref BucketName
+      BucketName:
+        Ref: BucketName
       OwnershipControls:
         Rules:
           - ObjectOwnership: BucketOwnerEnforced
@@ -175,7 +175,8 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Allow Kestra UI, and RDS access within VPC
-      VpcId: !Ref VpcId
+      VpcId:
+        Ref: VpcId
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 8080
@@ -192,53 +193,60 @@ Resources:
   AppEC2Instance:
     Type: AWS::EC2::Instance
     Properties:
-      SubnetId: !Ref SubnetIdEC2
-      IamInstanceProfile: !Ref EC2InstanceProfile
-      InstanceType: !Ref EC2InstanceType
+      KeyName:
+        Ref: KeyPairName
+      SubnetId:
+        Ref: SubnetIdEC2
+      IamInstanceProfile:
+        Ref: EC2InstanceProfile
+      InstanceType:
+        Ref: EC2InstanceType
       SecurityGroupIds:
-        - !Ref AppSecurityGroup
-      ImageId: !Ref LatestAmiId
-      UserData: !Base64
-        Fn::Sub: |
-          #!/bin/bash
-          set -e
-          cat <<EOF > /home/ubuntu/application-aws-ec2-marketplace.yaml
-          datasources:
-            postgres:
-              url: jdbc:postgresql://${PostgresDB.Endpoint.Address}:5432/${DBName}
-              driverClassName: org.postgresql.Driver
-              username: ${MasterUsername}
-              password: ${MasterUserPassword}
-          kestra:
-            server:
-              basic-auth:
-                enabled: true
-                username: ${BasicAuthUser}
-                password: ${BasicAuthPassword}
-            repository:
-              type: postgres
-            storage:
-              type: s3
-              s3:
-                region: ${AWSRegion}
-                bucket: ${StorageBucket}
-            queue:
-              type: postgres
-            tasks:
-              tmp-dir:
-                path: "/tmp/kestra-wd/tmp"
-            url: "http://localhost:8080/"
-          EOF
-          echo "Config file written to /home/ubuntu/application-aws-ec2-marketplace.yaml" > /home/ubuntu/READY.txt
-          docker run --pull=always --rm -d \
-            -p 8080:8080 \
-            --user=root \
-            -e MICRONAUT_ENVIRONMENTS=aws-ec2-marketplace \
-            -v /home/ubuntu/application-aws-ec2-marketplace.yaml:/etc/config/application-aws-ec2-marketplace.yaml \
-            -v /var/run/docker.sock:/var/run/docker.sock \
-            --name kestra \
-            kestra/kestra:latest server standalone --config /etc/config/application-aws-ec2-marketplace.yaml
-          echo "Kestra server started" > /home/ubuntu/READY.txt
+        - Ref: AppSecurityGroup
+      ImageId:
+        Ref: LatestAmiId
+      UserData:
+        Fn::Base64:
+          Fn::Sub: |
+            #!/bin/bash
+            set -e
+            cat <<EOF > /home/ubuntu/application-aws-ec2-marketplace.yaml
+            datasources:
+              postgres:
+                url: jdbc:postgresql://${PostgresDB.Endpoint.Address}:5432/${DBName}
+                driverClassName: org.postgresql.Driver
+                username: ${MasterUsername}
+                password: ${MasterUserPassword}
+            kestra:
+              server:
+                basic-auth:
+                  enabled: true
+                  username: ${BasicAuthUser}
+                  password: ${BasicAuthPassword}
+              repository:
+                type: postgres
+              storage:
+                type: s3
+                s3:
+                  region: ${AWSRegion}
+                  bucket: ${StorageBucket}
+              queue:
+                type: postgres
+              tasks:
+                tmp-dir:
+                  path: "/tmp/kestra-wd/tmp"
+              url: "http://localhost:8080/"
+            EOF
+            echo "Config file written to /home/ubuntu/application-aws-ec2-marketplace.yaml" > /home/ubuntu/READY.txt
+            docker run --pull=always --rm -d \
+              -p 8080:8080 \
+              --user=root \
+              -e MICRONAUT_ENVIRONMENTS=aws-ec2-marketplace \
+              -v /home/ubuntu/application-aws-ec2-marketplace.yaml:/etc/config/application-aws-ec2-marketplace.yaml \
+              -v /var/run/docker.sock:/var/run/docker.sock \
+              --name kestra \
+              kestra/kestra:latest server standalone --config /etc/config/application-aws-ec2-marketplace.yaml
+            echo "Kestra server started" > /home/ubuntu/READY.txt
   # -------------------------
   # IAM Role and Instance Profile
   # -------------------------
@@ -246,17 +254,17 @@ Resources:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
-        Version: '2012-10-17'
+        Version: "2012-10-17"
         Statement:
           - Effect: Allow
             Principal:
               Service: ec2.amazonaws.com
             Action: sts:AssumeRole
-      Path: /
+      Path: "/"
       Policies:
         - PolicyName: EC2S3AccessPolicy
           PolicyDocument:
-            Version: '2012-10-17'
+            Version: "2012-10-17"
             Statement:
               - Effect: Allow
                 Action:
@@ -265,12 +273,15 @@ Resources:
                   - s3:DeleteObject
                   - s3:ListBucket
                 Resource:
-                  - !GetAtt StorageBucket.Arn
-                  - !Sub ${StorageBucket.Arn}/*
+                  - Fn::GetAtt:
+                      - StorageBucket
+                      - Arn
+                  - Fn::Sub: "${StorageBucket.Arn}/*"
 
   EC2InstanceProfile:
     Type: AWS::IAM::InstanceProfile
     Properties:
-      Path: /
+      Path: "/"
       Roles:
-        - !Ref EC2S3AccessRole
+        - Ref: EC2S3AccessRole
+
