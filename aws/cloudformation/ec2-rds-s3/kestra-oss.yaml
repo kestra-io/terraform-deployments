@@ -10,14 +10,16 @@
 #     ParameterKey=BucketName,ParameterValue=<bucket-name> \
 #     ParameterKey=AWSRegion,ParameterValue=eu-west-1 \
 #     ParameterKey=VpcId,ParameterValue=<vpc-id> \
-#     ParameterKey=SubnetIdEC2,ParameterValue=<subnet1> \
-#     ParameterKey=SubnetIdRDS1,ParameterValue=<subnet2> \
-#     ParameterKey=SubnetIdRDS2,ParameterValue=<subnet3> \
+#     ParameterKey=SubnetIdEC2,ParameterValue=<subnet-for-ec2> \
+#     ParameterKey=SubnetIdRDS1,ParameterValue=<subnet-for-rds-1> \
+#     ParameterKey=SubnetIdRDS2,ParameterValue=<subnet-for-rds-2> \
 #     ParameterKey=DBInstanceIdentifier,ParameterValue=kestra-db \
 #     ParameterKey=DBName,ParameterValue=kestra \
-#     ParameterKey=DBEngineVersion,ParameterValue=<db-engine-version> \
-#     ParameterKey=DBInstanceClass,ParameterValue=<db-instance> \
-#     ParameterKey=EC2InstanceType,ParameterValue=<ec2-instance> \
+#     ParameterKey=DBEngineVersion,ParameterValue=17.4 \
+#     ParameterKey=DBInstanceClass,ParameterValue=db.t4g.micro \
+#     ParameterKey=EC2InstanceType,ParameterValue=t3.medium \
+#     ParameterKey=KeyPairName,ParameterValue=<your-keypair-name> \
+#     ParameterKey=SSHLocation,ParameterValue=<your-ip>/32 \
 #   --capabilities CAPABILITY_IAM
 #
 # Delete stack:
@@ -37,52 +39,67 @@ Parameters:
   MasterUsername:
     Type: String
     Default: kestra
+    Description: The username for the PostgreSQL RDS database (default: kestra).
   MasterUserPassword:
     Type: String
     NoEcho: true
+    Description: The password for the PostgreSQL RDS database master user. This value is hidden for security.
   BucketName:
     Type: String
+    Description: The name of the S3 bucket that Kestra will use for storage. Must be globally unique.
   LatestAmiId:
     Type: String
-    Description: Ubuntu AMI with Docker preinstalled
+    Description: The ID of the Ubuntu AMI used to launch the EC2 instance. Use an AMI with Docker preinstalled.
   AWSRegion:
     Type: String
     Default: eu-west-1
-    Description: The AWS region for S3 and general configuration
+    Description: The AWS region where all resources (EC2, RDS, S3) will be deployed.
   BasicAuthUser:
     Type: String
     Default: admin@kestra.io
-    Description: Kestra UI basic auth username
+    Description: The username (email) used to log in to the Kestra UI. Must be a valid email address.
   BasicAuthPassword:
     Type: String
     NoEcho: true
-    Description: Kestra UI basic auth password
+    Description: The password for the Kestra UI basic authentication. Hidden for security.
   DBInstanceIdentifier:
     Type: String
     Default: kestra
+    Description: The unique identifier for the RDS PostgreSQL instance.
   DBName:
     Type: String
     Default: kestra
+    Description: The name of the PostgreSQL database created on the RDS instance.
   DBEngineVersion:
     Type: String
     Default: "17.4"
+    Description: The PostgreSQL engine version used for the RDS instance.
   DBInstanceClass:
     Type: String
     Default: db.t4g.micro
+    Description: The instance class for the PostgreSQL RDS instance (defines CPU and memory).
   VpcId:
     Type: String
+    Description: The ID of the existing VPC where all resources will be deployed.
   SubnetIdEC2:
     Type: String
+    Description: The ID of the subnet within the VPC where the EC2 instance will be launched.
   SubnetIdRDS1:
     Type: String
+    Description: The first subnet ID used by the RDS Subnet Group for high availability.
   SubnetIdRDS2:
     Type: String
+    Description: The second subnet ID used by the RDS Subnet Group for high availability.
   EC2InstanceType:
     Type: String
     Default: t3.medium
+    Description: The instance type for the EC2 instance that hosts Kestra (defines CPU and memory).
   KeyPairName:
     Type: AWS::EC2::KeyPair::KeyName
-    Description: Name of an existing EC2 Key Pair to enable SSH access
+    Description: The name of an existing EC2 Key Pair to enable SSH access to the instance.
+  SSHLocation:
+    Type: String
+    Description: Set CIDR to x.x.x.x/32 to allow one specific IP address access, 0.0.0.0/0 to allow all IP addresses access, or another CIDR range.
 
 Resources:
   # -------------------------
@@ -181,7 +198,8 @@ Resources:
         - IpProtocol: tcp
           FromPort: 22
           ToPort: 22
-          CidrIp: 0.0.0.0/0
+          CidrIp:
+            Ref: SSHLocation
           Description: SSH access
         - IpProtocol: tcp
           FromPort: 8080
