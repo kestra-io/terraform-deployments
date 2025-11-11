@@ -1,6 +1,19 @@
-.idea
+# IntelliJ / JetBrains IDE project files
+.idea/
+
+# Terraform local files and state
 .terraform*
 terraform.tfstate*
 **/terraform.tfvars
+
+# AWS keys and credentials
 aws-ec2/kestra_kp.pem
 aws-ec2/kestra_kp.pub
+
+# AWS CloudFormation Composer temp files
+**/.aws-composer/
+
+# VS Code and system junk (optional but safe)
+.vscode/
+.DS_Store
+Thumbs.db
