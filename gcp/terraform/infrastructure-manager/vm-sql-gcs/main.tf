@@ -57,6 +57,17 @@ resource "google_compute_instance" "kestra_vm" {
 
   metadata_startup_script = file("${path.module}/startup.sh")
 
+  metadata = {
+  db_host             = google_sql_database_instance.kestra_db.ip_address[0].ip_address
+  db_name             = "kestra"
+  db_user             = var.db_user
+  db_password         = var.db_password
+  bucket_name         = google_storage_bucket.kestra_bucket.name
+  region              = var.region
+  basic_auth_user     = var.basic_auth_user
+  basic_auth_password = var.basic_auth_password
+  }
+
   tags = ["kestra"]
 }
 

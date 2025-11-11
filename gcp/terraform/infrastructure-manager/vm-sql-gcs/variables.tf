@@ -40,3 +40,14 @@ variable "allowed_cidr" {
   type        = string
   default     = "0.0.0.0/0"
 }
+
+variable "basic_auth_user" {
+  description = "Kestra UI basic auth username"
+  type        = string
+}
+
+variable "basic_auth_password" {
+  description = "Kestra UI basic auth password"
+  type        = string
+  sensitive   = true
+}
