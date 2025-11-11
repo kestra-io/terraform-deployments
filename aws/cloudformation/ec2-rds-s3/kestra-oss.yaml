@@ -39,7 +39,7 @@ Parameters:
   MasterUsername:
     Type: String
     Default: kestra
-    Description: The username for the PostgreSQL RDS database (default: kestra).
+    Description: The username for the PostgreSQL RDS database.
   MasterUserPassword:
     Type: String
     NoEcho: true
