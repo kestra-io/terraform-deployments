@@ -37,16 +37,22 @@ resource "google_sql_database_instance" "kestra_db" {
   name             = var.db_instance_name
   database_version = "POSTGRES_17"
   region           = var.region
+  deletion_protection = false
 
   settings {
-    tier               = var.db_tier
-    edition            = "ENTERPRISE"
-    availability_type  = "ZONAL"
-    disk_type          = "PD_SSD"
-    disk_size          = 30
-  }
+    tier = "db-custom-1-3840"
+    edition = "ENTERPRISE"
 
-  deletion_protection = false
+    ip_configuration {
+      ipv4_enabled    = false
+      private_network = "projects/${var.project_id}/global/networks/${var.vpc_network}"
+      enable_private_path_for_google_cloud_services = true
+    }
+
+    backup_configuration {
+      enabled = false
+    }
+  }
 }
 
 resource "google_sql_database" "kestra_database" {
@@ -100,53 +106,15 @@ resource "google_compute_instance" "kestra_vm" {
     }
   }
 
-  metadata_startup_script = <<-EOF
-    #!/bin/bash
-    set -e
-
-    apt-get update -y
-    apt-get install -y docker.io curl
-    systemctl enable docker
-    systemctl start docker
-
-    cat <<EOC > /home/ubuntu/application-gcp-vm.yaml
-    datasources:
-      postgres:
-        url: jdbc:postgresql://${google_sql_database_instance.kestra_db.connection_name}:5432/${var.db_name}
-        driverClassName: org.postgresql.Driver
-        username: ${var.db_user}
-        password: ${var.db_password}
-    kestra:
-      server:
-        basic-auth:
-          enabled: true
-          username: ${var.basic_auth_user}
-          password: ${var.basic_auth_password}
-      repository:
-        type: postgres
-      storage:
-        type: gcs
-        gcs:
-          bucket: ${google_storage_bucket.kestra_bucket.name}
-      queue:
-        type: postgres
-      tasks:
-        tmp-dir:
-          path: "/tmp/kestra-wd/tmp"
-      url: "http://localhost:8080/"
-    EOC
-
-    docker run --pull=always --rm -d \
-      -p 8080:8080 \
-      --user=root \
-      -e MICRONAUT_ENVIRONMENTS=google-compute \
-      -v /home/ubuntu/application-gcp-vm.yaml:/etc/config/application-gcp-vm.yaml \
-      -v /var/run/docker.sock:/var/run/docker.sock \
-      --name kestra \
-      kestra/kestra:latest server standalone --config /etc/config/application-gcp-vm.yaml
-
-    echo "Kestra server started" > /home/ubuntu/READY.txt
-  EOF
+  metadata_startup_script = templatefile("${path.module}/startup.sh.tmpl", {
+    db_host             = google_sql_database_instance.kestra_db.private_ip_address
+    db_name             = var.db_name
+    db_user             = var.db_user
+    db_password         = var.db_password
+    basic_auth_user     = var.basic_auth_user
+    basic_auth_password = var.basic_auth_password
+    bucket_name         = google_storage_bucket.kestra_bucket.name
+  })
 
   deletion_protection = false
   tags = ["kestra"]

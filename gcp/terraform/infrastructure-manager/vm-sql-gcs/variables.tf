@@ -9,6 +9,12 @@ variable "region" {
   default     = "europe-west1"
 }
 
+variable "vpc_network" {
+  description = "VPC network name where resources will be deployed"
+  type        = string
+  default     = "mnw"
+}
+
 variable "zone" {
   description = "Zone for VM"
   type        = string

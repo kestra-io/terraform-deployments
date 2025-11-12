@@ -1,0 +1,45 @@
+#!/bin/bash
+set -e
+
+apt-get update -y
+apt-get install -y docker.io curl
+systemctl enable docker
+systemctl start docker
+
+cat <<EOC > /home/ubuntu/application-gcp-vm.yaml
+datasources:
+  postgres:
+    url: jdbc:postgresql://${db_host}:5432/${db_name}
+    driverClassName: org.postgresql.Driver
+    username: ${db_user}
+    password: ${db_password}
+kestra:
+  server:
+    basic-auth:
+      enabled: true
+      username: ${basic_auth_user}
+      password: ${basic_auth_password}
+  repository:
+    type: postgres
+  storage:
+    type: gcs
+    gcs:
+      bucket: ${bucket_name}
+  queue:
+    type: postgres
+  tasks:
+    tmp-dir:
+      path: "/tmp/kestra-wd/tmp"
+  url: "http://localhost:8080/"
+EOC
+
+docker run --pull=always --rm -d \
+  -p 8080:8080 \
+  --user=root \
+  -e MICRONAUT_ENVIRONMENTS=google-compute \
+  -v /home/ubuntu/application-gcp-vm.yaml:/etc/config/application-gcp-vm.yaml \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  --name kestra \
+  kestra/kestra:latest server standalone --config /etc/config/application-gcp-vm.yaml
+
+echo "Kestra server started" > /home/ubuntu/READY.txt

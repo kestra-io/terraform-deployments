@@ -13,7 +13,6 @@ output "gcs_bucket_name" {
   value       = google_storage_bucket.kestra_bucket.name
 }
 
-output "cloudsql_instance_connection" {
-  description = "Cloud SQL instance connection name"
-  value       = google_sql_database_instance.kestra_db.connection_name
+output "db_private_ip" {
+  value = google_sql_database_instance.kestra_db.private_ip_address
 }
