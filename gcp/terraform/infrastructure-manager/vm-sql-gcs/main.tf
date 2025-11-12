@@ -13,6 +13,14 @@ provider "google" {
   zone    = var.zone
 }
 
+resource "google_compute_subnetwork" "kestra_subnet" {
+  name          = "kestra-subnet-infra-manager"
+  ip_cidr_range = "10.0.50.0/24"
+  region        = var.region
+  network       = "projects/${var.project_id}/global/networks/mnw"
+  private_ip_google_access = true
+}
+
 # ---------------------------
 #  GCS bucket for Kestra
 # ---------------------------
@@ -84,8 +92,12 @@ resource "google_compute_instance" "kestra_vm" {
   }
 
   network_interface {
-    network = "mnw"
-    access_config {}
+    network    = "projects/${var.project_id}/global/networks/mnw"
+    subnetwork = google_compute_subnetwork.kestra_subnet.id
+
+    access_config {
+      network_tier = "PREMIUM"
+    }
   }
 
   metadata_startup_script = <<-EOF
