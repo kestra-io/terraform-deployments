@@ -74,8 +74,12 @@ variable "basic_auth_password" {
   sensitive   = true
 }
 
-variable "ssh_cidr" {
-  description = "CIDR range allowed for SSH and Kestra UI access (e.g., 0.0.0.0/0 or x.x.x.x/32)"
+variable "ui_cidr" {
+  description = "CIDR range allowed for Kestra UI access (e.g., 0.0.0.0/0 or x.x.x.x/32)"
   type        = string
-  default     = "0.0.0.0/0"
+}
+
+variable "subnet_cidr_range" {
+  description = "The CIDR range for the Kestra subnet (e.g., 10.0.50.0/24)"
+  type        = string
 }

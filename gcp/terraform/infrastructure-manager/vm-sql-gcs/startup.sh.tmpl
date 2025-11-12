@@ -6,7 +6,7 @@ apt-get install -y docker.io curl
 systemctl enable docker
 systemctl start docker
 
-cat <<EOC > /home/ubuntu/application-gcp-vm.yaml
+cat <<EOC > /home/ubuntu/application-gcp-vm-marketplace.yaml
 datasources:
   postgres:
     url: jdbc:postgresql://${db_host}:5432/${db_name}
@@ -36,10 +36,10 @@ EOC
 docker run --pull=always --rm -d \
   -p 8080:8080 \
   --user=root \
-  -e MICRONAUT_ENVIRONMENTS=google-compute \
-  -v /home/ubuntu/application-gcp-vm.yaml:/etc/config/application-gcp-vm.yaml \
+  -e MICRONAUT_ENVIRONMENTS=gcp-vm-marketplace \
+  -v /home/ubuntu/application-gcp-vm-marketplace.yaml:/etc/config/application-gcp-vm-marketplace.yaml \
   -v /var/run/docker.sock:/var/run/docker.sock \
   --name kestra \
-  kestra/kestra:latest server standalone --config /etc/config/application-gcp-vm.yaml
+  kestra/kestra:latest server standalone --config /etc/config/application-gcp-vm-marketplace.yaml
 
 echo "Kestra server started" > /home/ubuntu/READY.txt

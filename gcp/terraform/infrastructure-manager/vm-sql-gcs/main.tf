@@ -15,7 +15,7 @@ provider "google" {
 
 resource "google_compute_subnetwork" "kestra_subnet" {
   name          = "kestra-subnet-infra-manager"
-  ip_cidr_range = "10.0.50.0/24"
+  ip_cidr_range = var.subnet_cidr_range
   region        = var.region
   network       = "projects/${var.project_id}/global/networks/mnw"
   private_ip_google_access = true
@@ -70,17 +70,17 @@ resource "google_sql_user" "kestra_user" {
 #  Firewall for SSH + Kestra UI
 # ---------------------------
 resource "google_compute_firewall" "kestra_firewall" {
-  name    = "kestra-allow-ssh-ui"
+  name    = "kestra-allow-ui"
   network = "mnw"
 
   allow {
     protocol = "tcp"
-    ports    = ["22", "8080"]
+    ports    = ["8080"]
   }
 
-  source_ranges = [var.ssh_cidr]
+  source_ranges = [var.ui_cidr]
   direction     = "INGRESS"
-  description   = "Allow SSH (22) and Kestra UI (8080) from configured CIDR"
+  description   = "Allow Kestra UI (8080) from configured CIDR"
 }
 
 # ---------------------------
