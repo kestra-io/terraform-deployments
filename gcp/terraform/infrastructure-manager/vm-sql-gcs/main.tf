@@ -17,8 +17,8 @@ provider "google" {
 #  GCS bucket for Kestra
 # ---------------------------
 resource "google_storage_bucket" "kestra_bucket" {
-  name     = var.bucket_name
-  location = var.region
+  name          = var.bucket_name
+  location      = var.region
   force_destroy = true
 }
 
@@ -31,7 +31,11 @@ resource "google_sql_database_instance" "kestra_db" {
   region           = var.region
 
   settings {
-    tier = var.db_tier
+    tier               = var.db_tier
+    edition            = "ENTERPRISE"
+    availability_type  = "ZONAL"
+    disk_type          = "PD_SSD"
+    disk_size          = 30
   }
 
   deletion_protection = false
@@ -132,5 +136,6 @@ resource "google_compute_instance" "kestra_vm" {
     echo "Kestra server started" > /home/ubuntu/READY.txt
   EOF
 
+  deletion_protection = false
   tags = ["kestra"]
 }
