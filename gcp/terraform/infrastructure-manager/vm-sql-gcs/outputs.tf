@@ -1,12 +1,19 @@
-output "kestra_ui" {
-  description = "Public URL of the Kestra UI"
+output "kestra_vm_ip" {
+  description = "External IP address of the Kestra VM"
+  value       = google_compute_instance.kestra_vm.network_interface[0].access_config[0].nat_ip
+}
+
+output "kestra_ui_url" {
+  description = "Kestra UI access URL"
   value       = "http://${google_compute_instance.kestra_vm.network_interface[0].access_config[0].nat_ip}:8080"
 }
 
-output "bucket_name" {
-  value = google_storage_bucket.kestra_bucket.name
+output "gcs_bucket_name" {
+  description = "Name of the GCS bucket used for Kestra storage"
+  value       = google_storage_bucket.kestra_bucket.name
 }
 
-output "db_connection_name" {
-  value = google_sql_database_instance.kestra_db.connection_name
+output "cloudsql_instance_connection" {
+  description = "Cloud SQL instance connection name"
+  value       = google_sql_database_instance.kestra_db.connection_name
 }

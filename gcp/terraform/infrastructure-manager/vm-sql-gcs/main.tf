@@ -1,5 +1,4 @@
 terraform {
-  required_version = ">= 1.5.0"
   required_providers {
     google = {
       source  = "hashicorp/google"
@@ -14,30 +13,61 @@ provider "google" {
   zone    = var.zone
 }
 
-# Storage bucket for Kestra
+# ---------------------------
+#  GCS bucket for Kestra
+# ---------------------------
 resource "google_storage_bucket" "kestra_bucket" {
   name     = var.bucket_name
   location = var.region
   force_destroy = true
 }
 
-# Cloud SQL (PostgreSQL)
+# ---------------------------
+#  Cloud SQL (PostgreSQL)
+# ---------------------------
 resource "google_sql_database_instance" "kestra_db" {
-  name             = "kestra-db"
-  database_version = "POSTGRES_15"
+  name             = var.db_instance_name
+  database_version = "POSTGRES_17"
   region           = var.region
+
   settings {
-    tier = "db-f1-micro"
+    tier = var.db_tier
   }
+
+  deletion_protection = false
+}
+
+resource "google_sql_database" "kestra_database" {
+  name     = var.db_name
+  instance = google_sql_database_instance.kestra_db.name
 }
 
 resource "google_sql_user" "kestra_user" {
-  instance = google_sql_database_instance.kestra_db.name
   name     = var.db_user
+  instance = google_sql_database_instance.kestra_db.name
   password = var.db_password
 }
 
-# Compute Engine instance
+# ---------------------------
+#  Firewall for SSH + Kestra UI
+# ---------------------------
+resource "google_compute_firewall" "kestra_firewall" {
+  name    = "kestra-allow-ssh-ui"
+  network = "mnw"
+
+  allow {
+    protocol = "tcp"
+    ports    = ["22", "8080"]
+  }
+
+  source_ranges = [var.ssh_cidr]
+  direction     = "INGRESS"
+  description   = "Allow SSH (22) and Kestra UI (8080) from configured CIDR"
+}
+
+# ---------------------------
+#  Compute Engine (Kestra VM)
+# ---------------------------
 resource "google_compute_instance" "kestra_vm" {
   name         = "kestra-vm"
   machine_type = var.machine_type
@@ -45,41 +75,62 @@ resource "google_compute_instance" "kestra_vm" {
 
   boot_disk {
     initialize_params {
-      image = "ubuntu-os-cloud/ubuntu-2404-lts"
-      size  = 30
+      image = "projects/ubuntu-os-cloud/global/images/family/ubuntu-2404-lts-amd64"
     }
   }
 
   network_interface {
-    network = "default"
+    network = "mnw"
     access_config {}
   }
 
-  metadata_startup_script = file("${path.module}/startup.sh")
+  metadata_startup_script = <<-EOF
+    #!/bin/bash
+    set -e
 
-  metadata = {
-  db_host             = google_sql_database_instance.kestra_db.ip_address[0].ip_address
-  db_name             = "kestra"
-  db_user             = var.db_user
-  db_password         = var.db_password
-  bucket_name         = google_storage_bucket.kestra_bucket.name
-  region              = var.region
-  basic_auth_user     = var.basic_auth_user
-  basic_auth_password = var.basic_auth_password
-  }
+    apt-get update -y
+    apt-get install -y docker.io curl
+    systemctl enable docker
+    systemctl start docker
+
+    cat <<EOC > /home/ubuntu/application-gcp-vm.yaml
+    datasources:
+      postgres:
+        url: jdbc:postgresql://${google_sql_database_instance.kestra_db.connection_name}:5432/${var.db_name}
+        driverClassName: org.postgresql.Driver
+        username: ${var.db_user}
+        password: ${var.db_password}
+    kestra:
+      server:
+        basic-auth:
+          enabled: true
+          username: ${var.basic_auth_user}
+          password: ${var.basic_auth_password}
+      repository:
+        type: postgres
+      storage:
+        type: gcs
+        gcs:
+          bucket: ${google_storage_bucket.kestra_bucket.name}
+      queue:
+        type: postgres
+      tasks:
+        tmp-dir:
+          path: "/tmp/kestra-wd/tmp"
+      url: "http://localhost:8080/"
+    EOC
+
+    docker run --pull=always --rm -d \
+      -p 8080:8080 \
+      --user=root \
+      -e MICRONAUT_ENVIRONMENTS=google-compute \
+      -v /home/ubuntu/application-gcp-vm.yaml:/etc/config/application-gcp-vm.yaml \
+      -v /var/run/docker.sock:/var/run/docker.sock \
+      --name kestra \
+      kestra/kestra:latest server standalone --config /etc/config/application-gcp-vm.yaml
+
+    echo "Kestra server started" > /home/ubuntu/READY.txt
+  EOF
 
   tags = ["kestra"]
-}
-
-# Firewall rules (for SSH + UI)
-resource "google_compute_firewall" "kestra_firewall" {
-  name    = "kestra-firewall"
-  network = "default"
-
-  allow {
-    protocol = "tcp"
-    ports    = ["22", "8080"]
-  }
-
-  source_ranges = [var.allowed_cidr]
 }
