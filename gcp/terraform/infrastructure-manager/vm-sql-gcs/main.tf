@@ -108,8 +108,8 @@ resource "google_compute_instance" "kestra_vm" {
 
   metadata_startup_script = templatefile("${path.module}/startup.sh.tmpl", {
     db_host             = google_sql_database_instance.kestra_db.private_ip_address
-    db_name             = var.db_name
-    db_user             = var.db_user
+    db_name             = google_sql_database.kestra_database.name
+    db_user             = google_sql_user.kestra_user.name
     db_password         = var.db_password
     basic_auth_user     = var.basic_auth_user
     basic_auth_password = var.basic_auth_password
