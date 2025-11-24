@@ -17,3 +17,8 @@ aws-ec2/kestra_kp.pub
 .vscode/
 .DS_Store
 Thumbs.db
+
+# ASDF and custom tooling files
+Taskfile.yml
+.tool-versions
+scripts/install-dependencies.sh
