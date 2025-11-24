@@ -1,3 +1,10 @@
+# terraform apply \
+#   -var="subscription_id=<azure_subscription>" \
+#   -var="ssh_public_key=$(cat <path_to_pub_key>)" \
+#   -var="postgres_password=<custom_password>" \
+#   -var='kestra_password=<custom_password>' \
+#   -var='admin_vm_password=<custom_password>'
+
 provider "azurerm" {
   features {}
   subscription_id = var.subscription_id
