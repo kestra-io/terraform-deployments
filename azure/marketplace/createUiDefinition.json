@@ -27,22 +27,32 @@
             ]
           },
           {
+            "name": "vmAdminUsername",
+            "type": "Microsoft.Compute.UserNameBox",
+            "label": "VM Admin Username",
+            "toolTip": "Username for the Virtual Machine",
+            "osPlatform": "Linux",
+            "constraints": {
+              "required": true,
+              "regex": "^[a-z0-9_-]+$",
+              "validationMessage": "Must be a valid Linux username."
+            }
+          },
+          {
             "name": "adminAccount",
             "type": "Microsoft.Compute.CredentialsCombo",
             "label": {
-              "username": "VM Admin Username",
               "password": "VM Admin Password",
               "sshKey": "SSH Public Key"
             },
             "toolTip": {
-              "username": "Username for the Virtual Machine",
               "password": "Password for SSH access",
               "sshKey": "SSH Key for secure access"
             },
             "osPlatform": "Linux",
             "constraints": {
               "required": {
-                "username": true,
+                "username": false,
                 "password": true,
                 "sshKey": false
               }
@@ -120,7 +130,7 @@
     ],
     "outputs": {
       "location": "[location()]",
-      "adminUsername": "[steps('kestraSettings').adminAccount.username]",
+      "adminUsername": "[steps('kestraSettings').vmAdminUsername]",
       "adminPassword": "[steps('kestraSettings').adminAccount.password]",
       "sshPublicKey": "[steps('kestraSettings').adminAccount.sshKey]",
       "vmSize": "[steps('kestraSettings').vmSize.value]",
