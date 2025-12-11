@@ -28,14 +28,14 @@
           },
           {
             "name": "vmAdminUsername",
-            "type": "Microsoft.Compute.UserNameBox",
+            "type": "Microsoft.Common.TextBox",
             "label": "VM Admin Username",
             "toolTip": "Username for the Virtual Machine",
-            "osPlatform": "Linux",
+            "defaultValue": "kestra_admin",
             "constraints": {
               "required": true,
-              "regex": "^[a-z0-9_-]+$",
-              "validationMessage": "Must be a valid Linux username."
+              "regex": "^[a-z][a-z0-9_-]*$",
+              "validationMessage": "Username must start with a letter and contain only lowercase letters, numbers, hyphens, or underscores."
             }
           },
           {
