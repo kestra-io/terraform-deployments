@@ -130,6 +130,7 @@
     ],
     "outputs": {
       "location": "[location()]",
+      "authenticationType": "[steps('kestraSettings').adminAccount.authenticationType]",
       "adminUsername": "[steps('kestraSettings').vmAdminUsername]",
       "adminPassword": "[steps('kestraSettings').adminAccount.password]",
       "sshPublicKey": "[steps('kestraSettings').adminAccount.sshKey]",
