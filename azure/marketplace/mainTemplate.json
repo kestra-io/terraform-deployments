@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
-  "contentVersion": "1.0.0.0",
+  "contentVersion": "1.0.0.1",
   "parameters": {
     "location": {
       "type": "string",
@@ -9,22 +9,30 @@
         "description": "Location for all resources."
       }
     },
+    "_artifactsLocation": {
+      "type": "string",
+      "defaultValue": "[deployment().properties.templateLink.uri]",
+      "metadata": {
+        "description": "The base URI where artifacts required by this template are located."
+      }
+    },
+    "_artifactsLocationSasToken": {
+      "type": "secureString",
+      "defaultValue": "",
+      "metadata": {
+        "description": "The sasToken required to access _artifactsLocation."
+      }
+    },
     "adminUsername": {
       "type": "string",
       "metadata": {
-        "description": "The administrator username for the Virtual Machine. Used for SSH connections."
+        "description": "The administrator username for the Virtual Machine."
       }
     },
     "adminPassword": {
       "type": "secureString",
       "metadata": {
-        "description": "The administrator password for the Virtual Machine. Required by Azure even if SSH key is used."
-      }
-    },
-    "sshPublicKey": {
-      "type": "secureString",
-      "metadata": {
-        "description": "The SSH Public Key used for secure authentication to the Virtual Machine."
+        "description": "The administrator password for the Virtual Machine."
       }
     },
     "storageAccountName": {
@@ -343,7 +351,7 @@
     },
     {
       "type": "Microsoft.Compute/virtualMachines",
-      "apiVersion": "2024-07-01",
+      "apiVersion": "2023-09-01",
       "name": "[variables('vmName')]",
       "location": "[parameters('location')]",
       "dependsOn": [
@@ -360,15 +368,7 @@
           "adminUsername": "[parameters('adminUsername')]",
           "adminPassword": "[parameters('adminPassword')]",
           "linuxConfiguration": {
-            "disablePasswordAuthentication": false,
-            "ssh": {
-              "publicKeys": [
-                {
-                  "path": "[concat('/home/', parameters('adminUsername'), '/.ssh/authorized_keys')]",
-                  "keyData": "[parameters('sshPublicKey')]"
-                }
-              ]
-            }
+            "disablePasswordAuthentication": false
           },
           "customData": "[base64(concat('#!/bin/bash\n','set -e\n','apt-get update && apt-get install -y docker.io\n','systemctl start docker && systemctl enable docker\n','usermod -aG docker ', parameters('adminUsername'), '\n','mkdir -p /home/', parameters('adminUsername'), '/config\n','cat <<EOF > /home/', parameters('adminUsername'), '/config/application.yml\n','datasources:\n','  postgres:\n','    url: jdbc:postgresql://', reference(resourceId('Microsoft.DBforPostgreSQL/flexibleServers', parameters('postgresInstanceName')), '2024-08-01').fullyQualifiedDomainName, ':5432/', parameters('databaseName'), '\n','    username: ', parameters('postgresAdmin'), '\n','    password: ', parameters('postgresPassword'), '\n','kestra:\n','  server:\n','    basic-auth:\n','      enabled: true\n','      username: ', parameters('kestraBasicUser'), '\n','      password: ', parameters('kestraBasicPassword'), '\n','  repository:\n','    type: postgres\n','  queue:\n','    type: postgres\n','  storage:\n','    type: azure\n','    azure:\n','      endpoint: ', reference(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2023-05-01').primaryEndpoints.blob, '\n','      container: ', parameters('containerName'), '\n','      connection-string: \"DefaultEndpointsProtocol=https;AccountName=', parameters('storageAccountName'), ';AccountKey=', listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2023-05-01').keys[0].value, ';EndpointSuffix=', environment().suffixes.storage, '\"\n','  tasks:\n','    tmp-dir:\n','      path: /tmp/kestra-wd/tmp\n','EOF\n','docker run -d --restart=always -p 8080:8080 --user=root -v /var/run/docker.sock:/var/run/docker.sock -v /home/', parameters('adminUsername'), '/config/application.yml:/etc/config/application.yml kestra/kestra:latest server standalone --config /etc/config/application.yml\n'))]"
         },
